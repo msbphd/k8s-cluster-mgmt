@@ -1,0 +1,29 @@
+- name: Teardown Micro8s Cluster Workers
+  hosts: workers
+  become: yes
+  tasks:
+    - name: Check if microk8s is installed
+      command: which microk8s
+      register: microk8s_exists
+      no_log: true
+      ignore_errors: yes
+
+    - name: microk8s not installed! Nothing to do. 
+      fail:
+        msg: "Microk8s is not installed"
+      when: microk8s_exists.rc != 0
+
+    - name: Leave Cluster
+      when: microk8s_exists.rc == 0
+      shell: microk8s leave
+
+    - name: Uninstall Microk8s
+      when: microk8s_exists.rc == 0
+      shell: snap remove microk8s
+
+- name: Teardown Microk8s Control-Plane
+  hosts: control_planes
+  become: yes
+  tasks:
+    - name: Uninstall Microk8s
+      shell: snap remove microk8s

@@ -1,0 +1,7 @@
+---
+- name: Restart MicroK8s
+  hosts: workers
+  become: yes
+  tasks:
+    - name: Restart microk8s
+      command: snap restart microk8s

@@ -1,0 +1,5 @@
+registry_url: <registry server>
+registry_port: 5000
+registry_username: <registry username>
+registry_token: <registry token>
+

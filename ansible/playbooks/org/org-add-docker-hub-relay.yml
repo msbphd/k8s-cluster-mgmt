@@ -1,0 +1,20 @@
+---
+- name: Configure Organization Dockerhub Relay
+  hosts: ["control_planes", "workers"]
+  become: true
+  tasks:
+    - name: Create relay configuration
+      copy:
+        dest: "/var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml"
+        content: |
+          server = "docker.io"
+
+          [host."https://relay-server:5000"]
+            capabilities = ["pull", "resolve"]
+
+    - name: Restart MicroK8s
+      command: microk8s stop
+      ignore_errors: true
+
+    - name: Start MicroK8s
+      command: microk8s start

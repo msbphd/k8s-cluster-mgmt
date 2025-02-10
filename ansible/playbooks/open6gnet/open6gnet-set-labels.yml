@@ -1,0 +1,8 @@
+---
+- name: Configure Open6Gnet node labels
+  hosts: ["control_planes", "workers"]
+  become: true
+  tasks:
+  - name: Set Node Label
+    command: microk8s kubectl label nodes {{ inventory_hostname }} {{ hostvars[inventory_hostname]['open6gnet_label'] }} --overwrite
+    delegate_to: open6gnet-testbed

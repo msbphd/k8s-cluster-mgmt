@@ -1,0 +1,20 @@
+---
+- name: Configure NAT rules
+  become: yes
+  hosts: head_node
+  tasks:
+    - name: Set iptables Forwarding rule
+      command: iptables -A FORWARD -o {{ public_interface }} -i {{ private_interface }} -s 10.123.123.0/24 -m conntrack --ctstate NEW -j ACCEPT
+
+    - name: Check Forwarding connection track rules
+      command: iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+    - name: Check Postrouting
+      command: iptables -t nat -A POSTROUTING -o eno1 -j MASQUERADE
+
+    - name: Get ip fowarding state
+      command: sysctl -w net.ipv4.ip_forward=1
+      register: forwarding_enabled
+
+    - name: Persist NAT rules
+      shell: mkdir -p /etc/iptables; [ -e rules.v4 ] && mv rules.v4 rules.v4.$(date +"%Y%m%d%H%M%S" ); iptables-save > /etc/iptables/rules.v4

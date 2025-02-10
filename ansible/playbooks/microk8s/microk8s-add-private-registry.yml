@@ -1,0 +1,24 @@
+---
+- name: Configure access to a private container registry
+  hosts: ["control_planes", "workers"]
+  become: true
+  vars_files:
+    - vars_private_registry.yml
+  tasks:
+    - name: Add container registry auth info
+      ansible.builtin.blockinfile:
+        path: /var/snap/microk8s/current/args/containerd-template.toml
+        marker: "# {mark} REGISTRY AUTH INFO (ADD BY ANSIBLE)"
+        block: |
+          [plugins."io.containerd.grpc.v1.cri".registry.configs."{{ registry_url }}:{{ registry_port }}".auth]
+            username = "{{ registry_username }}"
+            password = "{{ registry_token }}"
+        state: present
+
+    - name: Restart MicroK8s
+      command: microk8s stop
+      ignore_errors: true
+
+    - name: Start MicroK8s
+      command: microk8s start
+

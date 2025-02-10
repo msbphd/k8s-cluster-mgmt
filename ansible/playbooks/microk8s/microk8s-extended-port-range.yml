@@ -1,0 +1,21 @@
+---
+- name: Increase allowed Port Range for Kubernetes
+  hosts: ["control_planes", "workers"]
+  become: yes
+  tasks:
+  - name: Add extended port-range option to config
+    ansible.builtin.blockinfile:
+      path: /var/snap/microk8s/current/args/kube-apiserver
+      marker: "# {mark} EXTENDED PORT RANGE (ADD BY ANSIBLE)"
+      block: |
+        --service-node-port-range=30000-40000	
+      state: present
+   
+
+  - name: Restart MicroK8s
+    command: microk8s stop
+    ignore_errors: true
+
+  - name: Start MicroK8s
+    command: microk8s start
+

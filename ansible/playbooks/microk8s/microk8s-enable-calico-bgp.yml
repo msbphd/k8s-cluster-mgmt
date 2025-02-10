@@ -1,0 +1,27 @@
+---
+- name: Set Calico BGP for microk8s
+  become: yes
+  hosts: control_planes
+  tasks:
+  - name: "Adjust Calico configuration"
+    shell: | 
+      sed -i$(date +"%Y%m%d%H%M%S") 's/calico_backend: \"vxlan\"/calico_backend: \"bird\"/g' /var/snap/microk8s/current/args/cni-network/cni.yaml
+
+  - name: "Adjust Calico daemonset"
+    shell: | 
+      sed -i.$(date +"%Y%m%d%H%M%S") "s/name: CALICO_IPV4POOL_VXLAN/name: CALICO_IPV4POOL_IPIP/g" /var/snap/microk8s/current/args/cni-network/cni.yaml
+
+  - name: "Adjust liveness probe"
+    shell: | 
+      sed -i.$(date +"%Y%m%d%H%M%S") "s/- -felix-live/- -bird-live/g" /var/snap/microk8s/current/args/cni-network/cni.yaml
+
+  - name: "Adjust readiness probe"
+    shell: | 
+      sed -i.$(date +"%Y%m%d%H%M%S") "s/- -felix-ready/- -bird-ready/g" /var/snap/microk8s/current/args/cni-network/cni.yaml
+
+  - name: "Delete ippols"
+    command: microk8s kubectl delete ippools default-ipv4-ippool
+    tags: skip_delete_ippols
+
+  - name: "Restart Calico"
+    command: microk8s kubectl rollout restart --namespace kube-system daemonset/calico-node

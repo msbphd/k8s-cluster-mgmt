@@ -1,0 +1,22 @@
+---
+- name: Check if NAT rules are set in the head node
+  become: yes
+  hosts: head_node
+  tasks:
+    - name: Check Forwarding Rule
+      command: iptables -C FORWARD -o {{ public_interface }} -i {{ private_interface }} -s 10.123.123.0/24 -m conntrack --ctstate NEW -j ACCEPT
+
+    - name: Check Forwarding connection track rules
+      command: iptables -C FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+    - name: Check Postrouting
+      command: iptables -t nat -C POSTROUTING -o eno1 -j MASQUERADE
+
+    - name: Get ip fowarding state
+      command: cat /proc/sys/net/ipv4/ip_forward
+      register: forwarding_enabled
+
+    - name: Check if ip forwarding is enabled
+      debug:
+        msg: "IP forwarding is enabled"
+      when: forwarding_enabled.stdout == "1"

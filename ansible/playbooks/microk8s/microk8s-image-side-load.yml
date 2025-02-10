@@ -1,0 +1,25 @@
+---
+- name: Distribute images to nodes
+  hosts: control_planes
+  become: yes
+  tasks:
+    - name: Export Images to File
+      shell: microk8s images export-local > /tmp/images.tar
+      run_once: true
+      delegate_to: open6gnet-testbed
+
+
+- name: Load images from control-plane
+  hosts: workers
+  become: yes
+  tasks:
+    - name: Copy images file to workers
+      copy:
+        src: /tmp/images.tar
+        dest: /tmp/images.tar
+
+    - name: Import images
+      shell: microk8s ctr image import - < /tmp/images.tar
+
+
+

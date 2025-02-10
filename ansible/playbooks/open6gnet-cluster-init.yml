@@ -1,0 +1,4 @@
+---
+- import_playbook: ./microk8s/microk8s-cluster-setup.yml
+- import_playbook: ./microk8s/microk8s-add-private-registry.yml
+- import_playbook: ./open6gnet/open6gnet-set-labels.yml

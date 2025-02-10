@@ -1,0 +1,38 @@
+---
+- name: Install the MicroK8s Cluster
+  hosts: ["control_planes", "workers"]
+  become: yes
+  tasks:
+    - name: Install MicroK8s
+      shell: snap install microk8s --classic
+
+- name: Configure Cluster
+  hosts: control_planes
+  become: yes
+  tasks:
+    - name: Enable snap community
+      command: microk8s enable community
+
+    - name: Enable Multus
+      command: microk8s enable multus
+
+    - name: Microk8s add-node command to be used in the workers
+      command: microk8s add-node --token-ttl 300
+      register: add_node_result
+
+    - name: Extract the correct add-node command
+      set_fact:
+        add_node_cmd: "{{ add_node_result.stdout | regex_search('.*10.123.123.1.*') }}"
+        delegate_to: open6gnet-testbed
+        run_once: true
+
+    - name: Command extracted
+      debug:
+        msg: "{{ add_node_cmd }}"
+- name: Adding workers node to the cluster
+  hosts: workers
+  become: yes
+  tasks:
+    - name: Add Workers
+      command: "{{ hostvars['open6gnet-testbed']['add_node_cmd'] }} --worker"
+

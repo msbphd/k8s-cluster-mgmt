@@ -1,0 +1,7 @@
+---
+- name: Reboot all worker nodes in the cluster
+  hosts: workers
+  become: true
+  tasks:
+    - name: reboot
+      ansible.builtin.reboot:
