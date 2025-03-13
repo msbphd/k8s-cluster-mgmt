@@ -1,0 +1,16 @@
+{
+  "id": 0,
+  "url": "https://hub.docker.com",
+  "name": "string",
+  "credential": {
+    "type": "string",
+    "access_key": "string",
+    "access_secret": "string"
+  },
+  "type": "string",
+  "insecure": true,
+  "description": "string",
+  "status": "string",
+  "creation_time": "2025-02-14T16:30:34.823Z",
+  "update_time": "2025-02-14T16:30:34.823Z"
+}

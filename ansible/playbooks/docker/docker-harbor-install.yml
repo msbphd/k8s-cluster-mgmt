@@ -1,0 +1,6 @@
+# Uncomment to install docker
+- import_playbook: ../networking/hosts-file.yml
+- import_playbook: docker-install-vanilla.yml
+- import_playbook: docker-harbor-mirror.yml
+- import_playbook: docker-harbor-registry.yml
+

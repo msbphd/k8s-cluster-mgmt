@@ -1,5 +1,5 @@
-registry_url: <registry server>
+registry_url: <url>
 registry_port: 5000
-registry_username: <registry username>
-registry_token: <registry token>
+registry_username: <username>
+registry_token: <token>
 

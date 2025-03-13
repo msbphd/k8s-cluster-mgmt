@@ -18,8 +18,8 @@
       shell: microk8s leave
 
     - name: Uninstall Microk8s
-      when: microk8s_exists.rc == 0
       shell: snap remove microk8s
+      tags: ["force-uninstall"]
 
 - name: Teardown Microk8s Control-Plane
   hosts: control_planes
@@ -27,3 +27,4 @@
   tasks:
     - name: Uninstall Microk8s
       shell: snap remove microk8s
+      tags: ["force-uninstall"]

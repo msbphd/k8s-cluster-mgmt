@@ -1,0 +1,30 @@
+---
+- name: Increase allowed Port Range for Kubernetes
+  hosts: ["control_planes", "workers"]
+  become: yes
+  vars_files:
+    - docker-credentials.yml
+
+  tasks:
+  - name: Encode credentials
+    shell: echo -n "{{ username }}:{{ password }}" | base64
+    register: encoded_credentials
+
+  - name: Configure Docker Credentials
+    copy:
+      dest: /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+      content: |
+        server = "docker.io"
+        [host."https://registry-1.docker.io"]
+            capabilities = ["pull", "resolve"]
+            [host."https://registry-1.docker.io".header]
+              Authorization = ["Basic {{ encoded_credentials.stdout }}"]
+   
+
+  - name: Restart MicroK8s
+    command: microk8s stop
+    ignore_errors: true
+
+  - name: Start MicroK8s
+    command: microk8s start
+

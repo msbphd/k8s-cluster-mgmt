@@ -1,0 +1,12 @@
+- name: "Uninstall Harbor Mirror" 
+  hosts: ["head_node"]
+  become: yes 
+  tasks:
+  - name: Stop the Docer Composition
+    command: docker compose -f {{ ansible_user_dir }}/harbor/docker-compose.yml down -v
+  - name: Delete Data
+    command: rm -rf /harbor_data
+  - name: Delete Harbor Folder
+    command: rm -rf {{ ansible_user_dir }}/harbor
+  - name: Delete Harbor Package
+    command: rm {{ ansible_user_dir }}/harbor-offline-installer*.tgz

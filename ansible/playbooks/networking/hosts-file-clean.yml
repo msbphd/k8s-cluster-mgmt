@@ -1,0 +1,14 @@
+- name: Set Hosts files in all Nodes
+  hosts: all
+  become: yes
+  tasks:
+    - name: Insert entries in /etc/hosts
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        marker: "# {mark} cluster hosts"
+        block: |
+          {% for host in ansible_play_hosts %}
+          {{ hostvars[host].ansible_host }} {{ host }}
+          {% endfor %}
+        state: absent
+

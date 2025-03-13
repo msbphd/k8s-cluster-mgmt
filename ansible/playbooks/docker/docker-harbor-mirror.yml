@@ -1,0 +1,136 @@
+- name: "Install Harbor Mirror" 
+  become: yes 
+  hosts: ["head_node"] 
+ 
+  tasks: 
+    - name: Generate CA Cerificate private key 
+      command: "openssl genrsa -out {{ ansible_user_dir }}/ca.key 4096" 
+    
+    - name: Generate CA Cerificate 
+      command: "openssl req -x509 -new -nodes -sha512 -days 3650 -subj '/C=CN/CN=Open6GNet Cluster CA' -key {{ ansible_user_dir}}/ca.key -out {{ ansible_user_dir }}/ca.crt" 
+    
+    - name: Generate the Server Certificate
+      command: "openssl genrsa -out {{ ansible_user_dir }}/open6gnet-testbed.key 4096" 
+  
+    - name: Sign Certificate 
+      command: "openssl req -sha512 -new -subj '/C=CN/CN=open6gnet-testbed' -key {{ ansible_user_dir }}/open6gnet-testbed.key -out {{ ansible_user_dir }}/open6gnet-testbed.csr" 
+  
+    - name: x509 v3 extesion file 
+      copy: 
+        dest: "{{ ansible_user_dir }}/v3.ext"
+        content: | 
+          authorityKeyIdentifier=keyid,issuer
+          basicConstraints=CA:FALSE
+          keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+          extendedKeyUsage = serverAuth
+          subjectAltName = @alt_names
+  
+          [alt_names]
+          DNS.1=open6gnet-testbed
+  
+    - name: Generate Harbor certificate 
+      command: "openssl x509 -req -sha512 -days 3650 -extfile {{ ansible_user_dir }}/v3.ext -CA {{ ansible_user_dir }}/ca.crt -CAkey {{ ansible_user_dir }}/ca.key -CAcreateserial -in {{ ansible_user_dir }}/open6gnet-testbed.csr -out {{ ansible_user_dir }}/open6gnet-testbed.crt" 
+  
+    - name: Convert .crt to .cert 
+      command: "openssl x509 -inform PEM -in {{ ansible_user_dir }}/open6gnet-testbed.crt -out {{ ansible_user_dir }}/open6gnet-testbed.cert" 	
+  
+    - name: Create docker certs.d open6gnet directory 
+      file: 
+        path: "/etc/docker/certs.d/open6gnet-testbed:5000/" 
+        state: directory
+  
+    - name: Copy Key 
+      copy:
+        dest: /etc/docker/certs.d/open6gnet-testbed:5000/ 
+        src: "{{ ansible_user_dir }}/open6gnet-testbed.key" 
+        remote_src: yes
+  
+    - name: Copy cert 
+      copy:  
+        dest: /etc/docker/certs.d/open6gnet-testbed:5000/ 
+        src: "{{ ansible_user_dir }}/ca.crt" 
+        remote_src: yes
+  
+    - name: Copy Certificates to Docker 
+      copy: 
+        dest: "/etc/docker/certs.d/open6gnet-testbed:5000/" 
+        src: "{{ ansible_user_dir }}/open6gnet-testbed.cert" 
+        remote_src: yes
+
+- name: Distribute the CA certificate
+  become: yes
+  hosts: all
+  tasks:
+    - name: Read the CA content
+      slurp:
+        src: "{{ ansible_user_dir }}/ca.crt"
+      delegate_to: head-node
+      register: ca_cert
+
+    - name: Copy CA Cert to system folder 
+      copy:
+        dest: /usr/local/share/ca-certificates/ca.crt 
+        content: "{{ ca_cert.content | b64decode }}"
+
+    - name: Update CA Certificates 
+      command: update-ca-certificates
+
+    - name: Restart Docker 
+      command: systemctl restart docker
+
+- name: Install Harbor
+  become: yes
+  hosts: ["head_node"]
+  vars_files:
+  - docker_config.yml
+  tasks:
+    - name: Download Harbor 
+      ansible.builtin.get_url: 
+        url: https://github.com/goharbor/harbor/releases/download/v2.12.2/harbor-offline-installer-v2.12.2.tgz
+        dest: "{{ ansible_user_dir }}" 
+        checksum: md5:b3461bb74e1ad4fc24250567277a83a3
+  
+    - name: Untar Harbor Package 
+      ansible.builtin.unarchive: 
+        src: "{{ ansible_user_dir }}/harbor-offline-installer-v2.12.2.tgz" 
+        dest: "{{ ansible_user_dir }}" 
+        remote_src: yes
+   
+    - name: Load Harbor.yml Config File Template 
+      slurp: 
+        path: "{{ ansible_user_dir }}/harbor/harbor.yml.tmpl" 
+      register: harbor_config_file
+  
+    - name: Extract the Config Data 
+      set_fact: 
+        harbor_config_data: "{{ harbor_config_file['content'] | b64decode | from_yaml }}"
+  
+    - name: Set certificates in the Harbor Config File
+      ansible.utils.update_fact: 
+        updates: 
+        - path: harbor_config_data.data_volume
+          value: /harbor_data
+        - path: harbor_config_data.hostname
+          value: open6gnet-testbed 
+        - path: harbor_config_data.http.port
+          value: 5080 
+        - path: harbor_config_data.https.port
+          value: 5000
+        - path: harbor_config_data.https.certificate
+          value: "{{ ansible_user_dir }}/open6gnet-testbed.crt" 
+        - path: harbor_config_data.https.private_key
+          value: "{{ ansible_user_dir }}/open6gnet-testbed.key"
+      register: updated
+  
+    - name: Save the new Harbor configuration 
+      copy: 
+        content: "{{ updated.harbor_config_data | to_nice_yaml}}" 
+        dest: "{{ ansible_user_dir }}/harbor/harbor.yml"
+  
+    - name: Prepare Harbor for installation 
+      command: "{{ ansible_user_dir }}/harbor/prepare"
+  
+    - name: Execute Harbor 
+      shell: |
+       docker login -u "{{ docker_username }}" -p "{{ docker_key }}"
+       docker compose -f "{{ ansible_user_dir }}/harbor/docker-compose.yml" up -d

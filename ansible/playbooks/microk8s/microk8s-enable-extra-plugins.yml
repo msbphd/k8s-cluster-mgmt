@@ -1,0 +1,15 @@
+- name: Activate extra Microk8s plugins
+  hosts: control_planes
+  become: yes
+  tasks:
+    - name: Enable snap community
+      command: microk8s enable community
+
+    - name: Enable Multus
+      command: microk8s enable multus
+
+    - name: Enable Storage
+      command: microk8s enable storage
+
+    - name: Enable NFS
+      command: microk8s enable nfs

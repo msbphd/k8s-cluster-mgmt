@@ -1,0 +1,35 @@
+- name: Configure support for Microk8s
+  become: yes
+  hosts: ["control_planes"]
+  tasks:
+    - name: Install NFS
+      shell: |
+        mkdir -p /srv/nfs
+        chown nobody:nogroup /srv/nfs
+        chmod 0777 /srv/nfs
+        cp /etc/exports /etc/exports.bak.$(date +"%Y%m%d%H%M%S")
+      delegate_to: open6gnet-testbed
+    - name:
+      blockinfile:
+        path: /etc/exports
+        marker: "# {mark} Microk8s NFS" 
+        block: |
+          /srv/nfs 10.123.123.0/24(rw,sync,no_subtree_check)
+        state: present
+      delegate_to: open6gnet-testbed
+    - name: Restart NFS
+      command: systemctl restart nfs-kernel-server
+      delegate_to: open6gnet-testbed
+
+
+    - name: Install the CSI Driver Helm
+      shell: |
+        microk8s helm3 repo add csi-driver-nfs https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
+        microk8s helm3 repo update
+        microk8s helm3 install csi-driver-nfs csi-driver-nfs/csi-driver-nfs --namespace kube-system  --set kubeletDir=/var/snap/microk8s/common/var/lib/kubelet
+      delegate_to: open6gnet-testbed
+
+    - name: Wait services to be ready
+      command: microk8s kubectl wait pod --selector app.kubernetes.io/name=csi-driver-nfs --for condition=ready --namespace kube-system
+      delegate_to: open6gnet-testbed
+

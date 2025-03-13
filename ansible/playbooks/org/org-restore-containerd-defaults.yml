@@ -1,19 +1,16 @@
 ---
-- name: Configure Organization Dockerhub Relay
+- name: Restore cointaerd defaults
   hosts: ["control_planes", "workers"]
   become: true
-  vars_files:
-    - vars-add-docker-hub-relay.yml 
   tasks:
-    - name: Create relay configuration
+    - name: Set back the original configurations for docker.io registry
       copy:
         dest: "/var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml"
         content: |
           server = "docker.io"
 
-          [host."{{ relay_server }}"]
+          [host."https://registry-1.docker.io"]
             capabilities = ["pull", "resolve"]
-            override_path = true
 
     - name: Restart MicroK8s
       command: microk8s stop

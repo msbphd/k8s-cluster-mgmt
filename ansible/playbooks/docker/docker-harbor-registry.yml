@@ -1,0 +1,78 @@
+- name: Create a new Registry
+  hosts: ["head_node"]
+  vars_files:
+    - docker_config.yml
+    - harbor_config.yml
+  tasks:
+    - name: Wait for port 5000 to be open
+      wait_for:
+        timeout: 10 
+
+    - name: Send Request to Create new Registry
+      ansible.builtin.uri:
+        url: https://open6gnet-testbed:5000/api/v2.0/registries
+        method: POST
+        user: "{{ harbor_username }}"
+        password: "{{ harbor_password }}"
+        force_basic_auth: true
+        body_format: json
+        status_code: 201
+        body: |
+            {
+              "creation_time": "2025-02-14T12:05:42.531Z",
+              "credential": {
+                "access_key": "{{ docker_username }}",
+                "access_secret": "{{ docker_key }}",
+                "type": "basic"
+              },
+              "id": 0,
+              "name": "dockerhub",
+              "status": "healthy",
+              "type": "docker-hub",
+              "update_time": "2025-02-14T12:05:42.531Z",
+              "url": "https://hub.docker.com"
+            }
+    
+    - name: Request Registries List
+      ansible.builtin.uri:
+        url:  https://open6gnet-testbed:5000/api/v2.0/registries/1
+        user: "{{ harbor_username }}"
+        password: "{{ harbor_password }}"
+        force_basic_auth: true
+        method: GET
+      register: response
+
+    - name: debug
+      debug:
+        msg: "{{ response.json.name }}"
+
+    - name: request content
+      set_fact:
+        request_content:
+          project_name: "open6gnet"
+          public: true
+          metadata:
+            public: "true"
+            enable_content_trust: ""
+            enable_content_trust_cosign: ""
+            prevent_vul: ""
+            severity: ""
+            auto_scan: ""
+            auto_sbom_generation: ""
+            reuse_sys_cve_allowlist: ""
+            retention_id: ""
+            proxy_speed_kb: "-1"
+          storage_limit: 0
+          registry_id: 1
+
+    - name: Create Mirror Project
+      ansible.builtin.uri:
+        method: POST
+        user: "{{ harbor_username }}"
+        password: "{{ harbor_password }}"
+        force_basic_auth: true
+        status_code: 201
+        body_format: json
+        url: https://open6gnet-testbed:5000/api/v2.0/projects
+        body: "{{ request_content | to_json }}"
+      when: "{{ response.json.name == 'dockerhub' }}"

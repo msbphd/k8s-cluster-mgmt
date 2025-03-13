@@ -2,12 +2,20 @@
 - name: Distribute images to nodes
   hosts: control_planes
   become: yes
+  vars_files:
+    - docker-credentials.yml
+    - images-to-preload.yml
   tasks:
     - name: Export Images to File
       shell: microk8s images export-local > /tmp/images.tar
       run_once: true
       delegate_to: open6gnet-testbed
 
+    - name: Download images
+      command: microk8s ctr images pull --user "{{ username }}:{{ password }}" {{ item }}
+      loop: "{{ images_to_download }}"
+  tags: 
+    - skip-downloads
 
 - name: Load images from control-plane
   hosts: workers
@@ -20,6 +28,8 @@
 
     - name: Import images
       shell: microk8s ctr image import - < /tmp/images.tar
+
+- import_playbook: ./microk8s-restart.yml
 
 
 

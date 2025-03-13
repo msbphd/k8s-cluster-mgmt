@@ -1,0 +1,5 @@
+images_to_download:
+  - docker.io/calico/kube-controllers:v3.25.1
+  - docker.io/calico/cni:v3.25.1
+  - docker.io/cdkbot/hostpath-provisioner:1.5.0
+  - docker.io/library/busybox:1.28.4

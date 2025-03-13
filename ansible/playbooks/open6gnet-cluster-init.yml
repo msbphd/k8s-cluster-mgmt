@@ -1,4 +1,14 @@
 ---
+## NETWORKING
+- import_playbook: ./networking/hosts-file.yml
+# - import_playbook: ./networking/nat-configure-rules.yml
+
+## DOCKER AND HARBOR
+# - import_playbook: ./docker/docker-harbor-install.yml
+
+## Microk8s
 - import_playbook: ./microk8s/microk8s-cluster-setup.yml
+- import_playbook: ./microk8s/microk8s-enable-extra-plugins.yml
+- import_playbook: ./org/org-add-docker-hub-relay.yml
 - import_playbook: ./microk8s/microk8s-add-private-registry.yml
 - import_playbook: ./open6gnet/open6gnet-set-labels.yml

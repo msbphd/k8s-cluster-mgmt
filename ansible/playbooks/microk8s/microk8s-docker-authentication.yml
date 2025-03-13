@@ -3,17 +3,20 @@
   hosts: ["control_planes", "workers"]
   become: true
   vars_files:
-    - vars_private_registry.yml
+    - docker-credentials.yml
   tasks:
     - name: Add container registry auth info
       ansible.builtin.blockinfile:
         path: /var/snap/microk8s/current/args/containerd-template.toml
-        marker: "# {mark} REGISTRY AUTH INFO (ADD BY ANSIBLE)"
+        marker: "# {mark} DOCKER.IO AUTH"  
         block: |
-          [plugins."io.containerd.grpc.v1.cri".registry.configs."{{ registry_url }}:{{ registry_port }}".auth]
-            username = "{{ registry_username }}"
-            password = "{{ registry_token }}"
+          [plugins."io.containerd.grpc.v1.cri".registry.configs."docker.io".auth]
+            username = "{{ username }}"
+            password = "{{ password }}"
         state: present
+
+    - name: Remove all images
+      shell: microk8s ctr images rm $(microk8s ctr images list | awk 'NR>1 {print $1}')
 
     - name: Restart MicroK8s
       command: snap stop microk8s
@@ -21,4 +24,3 @@
 
     - name: Start MicroK8s
       command: snap start microk8s
-

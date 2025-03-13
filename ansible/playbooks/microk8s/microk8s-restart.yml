@@ -1,0 +1,9 @@
+---
+- name: Restart MicroK8s
+  hosts: ["control_planes", "workers"]
+  become: yes
+  tasks:
+    - name: Stop microk8s
+      command: snap stop microk8s
+    - name: Start microk8s
+      command: snap start microk8s

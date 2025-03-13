@@ -1,5 +1,5 @@
 ---
-- name: Configure access to a private container registry
+- name: Remove Previously Configured Private Registry
   hosts: ["control_planes", "workers"]
   become: true
   vars_files:
@@ -13,12 +13,12 @@
           [plugins."io.containerd.grpc.v1.cri".registry.configs."{{ registry_url }}:{{ registry_port }}".auth]
             username = "{{ registry_username }}"
             password = "{{ registry_token }}"
-        state: present
+        state: absent
 
     - name: Restart MicroK8s
-      command: snap stop microk8s
+      command: microk8s stop
       ignore_errors: true
 
     - name: Start MicroK8s
-      command: snap start microk8s
+      command: microk8s start
 
