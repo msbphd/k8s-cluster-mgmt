@@ -1,0 +1,11 @@
+nrf  8000
+scp  8001
+udr  8002
+udm  8003
+amf  8004
+smf  8005
+pcf  8006
+ausf 8007
+bsf  8008
+nssf 8009
+upf  8010

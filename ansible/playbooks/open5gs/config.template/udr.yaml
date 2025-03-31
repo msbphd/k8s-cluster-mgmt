@@ -1,0 +1,23 @@
+db_uri: mongodb://<host>/open5gs
+logger:
+  file:
+    path: /var/log/open5gs/open5gs.log
+  level: info   # fatal|error|warn|info(default)|debug|trace
+
+global:
+  max:
+    ue: 1024  # The number of UE can be increased depending on memory size.
+#    peer: 64
+
+udr:
+  sbi:
+    server:
+      - dev: <interface>
+        port: 8002
+        advertise: <host>
+    client:
+#      nrf:
+#        - uri: http://127.0.0.10:7777
+      scp:
+        - uri: http://<host>:8001
+

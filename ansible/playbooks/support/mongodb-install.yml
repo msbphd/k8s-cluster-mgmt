@@ -1,0 +1,32 @@
+---
+- name: Install MongoDB
+  become: yes
+  hosts: ["control_planes"]
+  tasks:
+    - block:
+      - name: Install Requisites
+        command: apt-get -y install gnupg curl
+      - name: Import mongo public key
+        shell: curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | gpg --dearmor | tee /usr/share/keyrings/mongodb-server-8.0.gpg > /dev/null
+      - name: Create Apt source List
+        file:
+          path: /etc/apt/sources.list.d/mongodb-org-8.0.list
+          state: touch
+      - name: Source List Content
+        ansible.builtin.blockinfile:
+          path:  /etc/apt/sources.list.d/mongodb-org-8.0.list
+          marker: "# {mark} Mongo Source List "
+          block: |
+            deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/8.0 multiverse
+      - name: Configure Bind Interface
+        ansible.builtin.lineinfile:
+          path: /etc/mongod.conf
+          regexp: "^\\s*bindIp: 127.0.0.1"
+          line: "  bindIp: {{ ansible_host }}" 
+      - name: Install MongoDB
+        shell: |
+          apt-get update
+          apt-get install -y mongodb-org
+          systemctl start mongod
+          systemctl enable mongod
+      delegate_to: open6gnet-testbed

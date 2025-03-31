@@ -1,0 +1,63 @@
+- name: Build Open5GS 2.7.1
+  hosts: control_planes, workers
+  tasks:
+    - name: Clone Repository
+      git:
+        repo: https://github.com/open5gs/open5gs.git
+        dest: "{{ ansible_user_dir }}/open5gs"
+        version: 'v2.7.1'
+        force: yes
+        recursive: yes
+    - name: Install dependencies
+      become: yes 
+      apt:
+        name:
+          -  python3-pip
+          - python3-setuptools 
+          - python3-wheel
+          - ninja-build
+          - build-essential
+          - flex
+          - bison
+          - git
+          - cmake
+          - libsctp-dev
+          - libgnutls28-dev
+          - libgcrypt-dev
+          - libssl-dev
+          - libidn11-dev
+          - libmongoc-dev
+          - libbson-dev 
+          - libyaml-dev
+          - libnghttp2-dev
+          - libmicrohttpd-dev
+          - libcurl4-gnutls-dev
+          - libnghttp2-dev
+          - libtins-dev
+          - libtalloc-dev
+          - meson
+          - iproute2
+          - iptables
+          - iputils-ping
+          - netcat
+          - tcpdump
+          - cmake
+          - curl
+          - gnupg
+        state: present
+        update_cache: yes
+    - name: Preapre compilation of Open5GS
+      command: meson build --prefix=/
+      args:
+        chdir: "{{ ansible_user_dir }}/open5gs"
+    - name: Compile Open5GS
+      command: ninja -C build
+      args:
+        chdir: "{{ ansible_user_dir }}/open5gs"
+    - name: Install Open5GS
+      command: ninja install
+      become: yes
+      args:
+        chdir: "{{ ansible_user_dir }}/open5gs/build"
+
+

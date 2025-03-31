@@ -1,0 +1,23 @@
+logger:
+  file:
+    path: /var/log/open5gs/open5gs.log
+level: info   # fatal|error|warn|info(default)|debug|trace
+
+global:
+  max:
+    ue: 1024  # The number of UE can be increased depending on memory size.
+#    peer: 64
+
+nssf:
+  sbi:
+    server:
+      - dev: enx3c8cf8ea54ed
+        port: 8809    
+        advertise: open6gnet-testbed
+    client:
+      scp:
+        - uri: http://open6gnet-testbed:8801
+      nsi:
+        - uri: http://open6gnet-testbed:8800
+          s_nssai:
+            sst: 1

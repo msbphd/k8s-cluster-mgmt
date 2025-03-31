@@ -1,0 +1,28 @@
+db_uri: mongodb://10.123.123.1/open5gs
+
+logger:
+  file:
+    path: /var/log/open5gs/open5gs.log
+  level: info   # fatal|error|warn|info(default)|debug|trace
+
+global:
+  max:
+    ue: 1024  # The number of UE can be increased depending on memory size.
+#    peer: 64
+
+pcf:
+  sbi:
+    server:
+      - dev: enx3c8cf8ea54ed
+        port: 8806
+        advertise: open6gnet-testbed
+    client:
+#      nrf:
+#        - uri: http://127.0.0.10:7777
+      scp:
+        - uri: http://open6gnet-testbed:8801
+  metrics:
+    server:
+      - address: 127.0.0.13
+        port: 9090
+

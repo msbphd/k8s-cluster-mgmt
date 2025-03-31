@@ -1,0 +1,14 @@
+ansible/playbooks/open5gs/config
+ansible/playbooks/docker/docker_config.yml
+ansible/playbooks/microk8s/vars_private_registry.yml
+5G/baremetal.tar.gz
+5G/baremetal/UERANSIM/
+5G/baremetal/configs/
+5G/baremetal/open5gs-2.7.1-bin.tar.gz
+5G/baremetal/ueransim-v3.2.7.tar.gz
+5G/core1-node4
+5G/node4
+ansible/.gitignore
+ansible/playbooks/open6gnet/server-0.8.asc
+node-configs/
+server-0.8.asc

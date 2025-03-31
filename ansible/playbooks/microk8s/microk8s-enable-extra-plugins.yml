@@ -5,8 +5,8 @@
     - name: Enable snap community
       command: microk8s enable community
 
-    - name: Enable Multus
-      command: microk8s enable multus
+#    - name: Enable Multus
+#      command: microk8s enable multus
 
     - name: Enable Storage
       command: microk8s enable storage

@@ -1,0 +1,47 @@
+- name: Set Open5GS configuration files to experiment Setup 1
+  hosts: control_planes, workers
+  become: yes
+  vars:
+    open5gs_config_files_no_upf:
+      - amf.yaml
+      - ausf.yaml
+      - bsf.yaml
+      - nrf.yaml
+      - nssf.yaml
+      - pcf.yaml
+      - scp.yaml
+      - smf.yaml
+      - udm.yaml
+      - udr.yaml
+
+  tasks:
+    - name: Create config directory
+      file:
+        path: "{{ playbook_dir }}/config"
+        state: directory
+        mode: "0755"
+    - name: Copy template files to be customized
+      copy:
+        src:  "{{ playbook_dir }}/config.template/"
+        dest: "{{ playbook_dir }}/config"
+        mode: "0755"
+    - name: Copy Configurations to all nodes
+      copy:
+        src: "{{ playbook_dir }}/config/"
+        dest: /etc/open5gs
+        owner: root
+        group: root
+        mode: '0755'
+        force: yes
+    - name: Set interface in the configuration files
+      replace:
+        path: "/etc/open5gs/{{ item }}"
+        regexp: "<interface>"
+        replace: "{{ hostvars[inventory_hostname]['cluster_network_interface'] }}"
+      loop: "{{ open5gs_config_files_no_upf }}"
+    - name: Set hostname
+      replace:
+        path: "/etc/open5gs/{{ item }}"
+        regexp: "<host>"
+        replace: "{{ inventory_hostname }}"
+      loop: "{{ open5gs_config_files_no_upf }}"

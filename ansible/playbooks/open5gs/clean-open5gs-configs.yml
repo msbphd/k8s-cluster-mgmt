@@ -1,0 +1,7 @@
+- name: remove all open5gs configs from all nodes in the cluster
+  become: yes
+  hosts: control_planes, workers
+  tasks:
+    - name:
+      shell: rm /etc/open5gs/*.yaml
+

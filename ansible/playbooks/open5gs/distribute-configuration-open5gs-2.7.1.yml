@@ -1,0 +1,12 @@
+- name: Copy configuration files
+  hosts: all
+  become: yes
+  tasks:
+    - name: Copy Configurations to all nodes
+      copy:
+        src: "{{ playbook_dir }}/config/"
+        dest: /etc/open5gs
+        owner: root
+        group: root
+        mode: '0755'
+        force: yes
