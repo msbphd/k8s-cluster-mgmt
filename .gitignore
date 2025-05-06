@@ -12,4 +12,4 @@ ansible/.gitignore
 ansible/playbooks/open6gnet/server-0.8.asc
 node-configs/
 server-0.8.asc
-
+.idea
