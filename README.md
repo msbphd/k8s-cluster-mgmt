@@ -91,7 +91,16 @@ ssh-copy-id -i ~/.ssh/id_rsa.pub ran2-node7
 sudo apt update
 sudo apt install ansible
 ```
-    
+
+- Install the required Ansible collections.
+
+```bash
+ansible-galaxy collection install community.general
+ansible-galaxy collection install ansible.utils
+```
+
+```bash
+
 - On the **open6gnet-testbed** host, clone the repository.
 
 ```bash
